@@ -204,6 +204,29 @@ terraform apply
 
 ![WhatsApp Image 2025-06-03 at 01 58 32_a992567a](https://github.com/user-attachments/assets/7d8ce24f-069b-4322-9604-ac3cd531ae9e) 
 
+### 6. Container Forensics (Volatility3)
+
+## Steps:
+
+- Launched an Alpine Docker container:
+```
+docker run -dit --name suspect alpine sh
+```
+
+- docker run -dit --name suspect alpine sh
+```
+PID=$(docker inspect -f '{{.State.Pid}}' suspect)
+sudo gcore -o /tmp/container_dump $PID
+```
+- Captured memory using gcore:
+
+PID=$(docker inspect -f '{{.State.Pid}}' suspect)
+sudo gcore -o /tmp/container_dump $PID
+
+Analyzed dump using Volatility3:
+```
+vol -f /tmp/container_dump.$PID linux.pslist
+```
 
 ## 📺 Demo Video
 
