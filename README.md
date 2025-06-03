@@ -24,7 +24,7 @@ Welcome to the **Cloud Attack Framework** project! This repository simulates a m
 
 | VM Name         | Role                     | OS         | Tools Installed                 |
 |-----------------|--------------------------|------------|--------------------------------|
-| Attacker VM     | Attack launch & control  | Kali Linux | Python, Rust, Tor, Falco, Suricata           |
+| Attacker VM     | Attack launch & control  | Kali Linux | Python, Rust, Tor, Falco, Suricata, Volatility3          |
 | Victim VM 1     | Windows target           | Windows 10 | Persistence scripts            |
 | Victim VM 2     | Linux target             | Ubuntu     | Persistence scripts            |
 | AWS Environment | Cloud resources( S3, EC2, ECS)          |     |            |
@@ -151,13 +151,14 @@ tail -f /var/log/suricata/
 
 4.2 Falco
 
-  Installed natively on Kali (no Docker dependency) using [Falco Documentation](https://falco.org/docs/getting-started/falco-linux-quickstart).
+  - Installed natively on Kali (no Docker dependency) using [Falco Documentation](https://falco.org/docs/getting-started/falco-linux-quickstart).
   
-  Detects container execution, abnormal file writes, shell access
+  - Detects container execution, abnormal file writes, shell access
   
-  Logs runtime events on Kali
+  - Logs runtime events on Kali
 
 **Screenshot:** 
+
 ![WhatsApp Image 2025-06-03 at 01 58 33_3f9511d2](https://github.com/user-attachments/assets/396c1e03-e323-48ad-a06d-04639924c936)
 
 
@@ -220,10 +221,12 @@ sudo gcore -o /tmp/container_dump $PID
 ```
 - Captured memory using gcore:
 
+```
 PID=$(docker inspect -f '{{.State.Pid}}' suspect)
 sudo gcore -o /tmp/container_dump $PID
+```
 
-Analyzed dump using Volatility3:
+- Analyzed dump using Volatility3:
 ```
 vol -f /tmp/container_dump.$PID linux.pslist
 ```
