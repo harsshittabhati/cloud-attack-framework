@@ -2,7 +2,6 @@
 
 Welcome to the **Cloud Attack Framework** project! This repository simulates a multi-stage cyber attack targeting both on-system backdoors and AWS cloud misuse.
 
----
 
 ## 🎯 Project Goals
 
@@ -17,28 +16,25 @@ Welcome to the **Cloud Attack Framework** project! This repository simulates a m
 - Detect the attack using:  
   - Falco (system behavior monitoring)  
   - Suricata (network traffic inspection)  
-  - AWS CloudTrail (AWS API activity logs)  
-  - Memory analysis with Volatility3  
+  - AWS CloudTrail (AWS API activity logs)   
 
----
+
 
 ## 🖥️ Lab Setup Overview
 
 | VM Name         | Role                     | OS         | Tools Installed                 |
 |-----------------|--------------------------|------------|--------------------------------|
-| Attacker VM     | Attack launch & control  | Kali Linux | Python, Rust, Tor              |
+| Attacker VM     | Attack launch & control  | Kali Linux | Python, Rust, Tor, Falco, Suricata           |
 | Victim VM 1     | Windows target           | Windows 10 | Persistence scripts            |
 | Victim VM 2     | Linux target             | Ubuntu     | Persistence scripts            |
-| Detection VM    | Monitoring & analysis    | Ubuntu     | Falco, Suricata, Volatility3  |
-| AWS Environment | Cloud resources          | AWS EC2    | Boto3, Terraform               |
+| AWS Environment | Cloud resources( S3, EC2, ECS)          |     |            |
 
----
+
 
 ## 🖼️ Architecture Diagram
 
-![Architecture Diagram](diagrams/architecture-diagram.png)
+![image](https://github.com/user-attachments/assets/8b7a28e7-731b-4edb-b71d-dc79b86e9cc5)
 
----
 ## 📂 Repository Structure
 
 ```
@@ -53,52 +49,6 @@ cloud-attack-framework/
 ├── diagrams/ # Architecture diagrams and flowcharts
 └── screenshots/ # Screenshots showing attack phases and detections
 ```
-## 🎯 Project Overview & Tasks
-
-### 1. PDF Malware Delivery  
-Using Python, we generate a malicious PDF file that, when opened on the victim machine, drops malware to establish initial access.
-
-**Screenshot:**  
-![PDF Delivery](screenshots/pdf_delivery.png)
-
----
-
-### 2. Command & Control (C2)  
-The C2 server and client communicate using encrypted messages over covert channels (DNS or Tor), allowing stealthy remote control.
-
-**Screenshot:**  
-![C2 Channel Running](screenshots/c2_channel_running.png)
-
----
-
-### 3. Persistence on Target Systems  
-Scripts are implemented to ensure the malware starts on every reboot for both Linux and Windows machines, leveraging system services and startup files.
-
----
-
-### 4. AWS Abuse & Cloud Exploitation  
-Once AWS credentials are stolen, boto3 scripts list AWS services, upload malware payloads to S3, and launch fake ECS containers to maintain cloud presence. Terraform tracks AWS resource changes.
-
-**Screenshot:**  
-![AWS Abuse Output](screenshots/aws_abuse_output.png)
-
----
-
-### 5. Detection & Monitoring  
-Falco and Suricata monitor system behaviors and network traffic for suspicious activity, while AWS CloudTrail logs are reviewed for anomalous API calls.
-
-**Screenshot:**  
-![Falco Alert](screenshots/falco_alerts.png)
-
----
-
-### 6. Memory Forensics  
-Volatility3, integrated with Jupyter notebooks, inspects memory dumps inside Docker containers to uncover hidden malicious processes or artifacts.
-
----
-
-
----
 
 ## 🚀 How to Use
 
@@ -108,27 +58,166 @@ Volatility3, integrated with Jupyter notebooks, inspects memory dumps inside Doc
 4. **Establish Persistence:** Run OS-specific persistence scripts on target VMs.  
 5. **Steal and Abuse AWS Credentials:** Use boto3 scripts to interact with AWS.  
 6. **Monitor and Detect:** Deploy Falco and Suricata to catch suspicious activity.  
-7. **Perform Memory Forensics:** Use Volatility3 to analyze memory dumps.  
+7. **Perform Memory Forensics:** Use Volatility3 to analyze memory dumps.
 
----
+
+## 🎯 Attack Steps
+
+### 1. Malware Delivery via PDF
+
+- Created fake PDF on Kali Linux
+```
+python3 generate_pdf.py
+ ```
+
+- Delivered to Windows 10 using USB/HTTP method
+```
+python3 -m http.server 8888
+```
+
+- User opens PDF triggering PowerShell script (persistent C2 setup)
+
+**Screenshots:**
+
+![WhatsApp Image 2025-06-03 at 01 58 32_ba3b842c](https://github.com/user-attachments/assets/33ae7939-5461-4273-b5e4-759308fdd4dd)
+
+![WhatsApp Image 2025-06-03 at 01 58 30_47fcbd79](https://github.com/user-attachments/assets/5ef9ac87-8a1d-453d-9d37-468ff8d8ebfd)
+
+
+### 2. Command & Control (C2) 
+The C2 server and client communicate using encrypted messages over covert channels (DNS or Tor), allowing stealthy remote control.
+- TCP Socket
+  - C2 Server (attacker-controlled, listens for connections)
+    - Listens on a port
+    - Accepts encrypted messages from clients
+    - Sends back encrypted responses
+```
+python3 c2_server.py
+```
+  - C2 Client (backdoor) on the victim, which:
+    - Connects to attacker
+    - Decrypts command
+    - Executes (e.g., whoami, ipconfig, etc.)
+    - Encrypts and sends back output
+```
+python3 c2_cleint.py
+```
+**Screenshot:**
+
+![WhatsApp Image 2025-06-03 at 01 58 34_88cdea76](https://github.com/user-attachments/assets/46b2acb6-87ca-423d-93cd-a9b8cc5dc433)
+
+- DNS C2 Channel
+  - Custom DNS server on Kali
+  - PowerShell script on Windows sends queries (TXT records)
+  - Receives commands covertly from DNS responses
+```
+python3 dns_c2_server.py
+```
+```
+python3 dns_c2_cleint.py
+```
+
+
+### 3. Persistence on Target Systems  
+- Persistence was achieved via scheduled tasks and registry edits.
+```
+$action = New-ScheduledTaskAction -Execute "python.exe" -Argument "C:\Users\Public\dns_c2_client.py"
+$trigger = New-ScheduledTaskTrigger -AtLogOn
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "DNS_C2_Client" -Description "Runs DNS C2 Client at user logon"
+```
+
+![WhatsApp Image 2025-06-03 at 01 58 34_859ed960](https://github.com/user-attachments/assets/ce6fdaab-de82-4db8-a533-35d60a77d120)
+
+
+### 4. Detection Tools
+
+4.1 Suricata - Used to detect abnormal DNS queries or packet anomalies
+
+  Installed and configured on Kali:
+```
+sudo apt install suricata
+sudo suricata -i <your_interface> -c /etc/suricata/suricata.yaml -l /var/log/suricata
+```
+  or via [Youtube video](https://www.youtube.com/watch?v=uXNhwduQve8)
+  
+
+**Screenshot:** 
+```
+tail -f /var/log/suricata/
+```
+
+![WhatsApp Image 2025-06-03 at 01 58 28_6fe142e1](https://github.com/user-attachments/assets/0a63a5f0-2fc8-4e45-8b97-e513a4a1d22e)
+
+
+4.2 Falco
+
+  Installed natively on Kali (no Docker dependency) using [Falco Documentation](https://falco.org/docs/getting-started/falco-linux-quickstart).
+  
+  Detects container execution, abnormal file writes, shell access
+  
+  Logs runtime events on Kali
+
+**Screenshot:** 
+![WhatsApp Image 2025-06-03 at 01 58 33_3f9511d2](https://github.com/user-attachments/assets/396c1e03-e323-48ad-a06d-04639924c936)
+
+
+4.3 AWS CloudTrail
+
+  Captures all API activity (S3 list, EC2 launch, IAM policy creation),
+  Accessed via AWS Console or CLI 
+  
+**Screenshot:** 
+
+![WhatsApp Image 2025-06-03 at 01 58 30_f80035e1](https://github.com/user-attachments/assets/2f6c023b-d62a-483f-99f8-7560290d944b)
+
+
+### 5. AWS Cloud Abuse
+
+- Boto3: Custom scripts to access S3, create tokens, enumerate services
+- Example Abuse
+
+  - Created EC2 from Kali
+  - Listed S3 buckets and IAM users
+  - Enabled public access to bucket
+ 
+**Screenshot:**
+
+```
+python3 aws_abuse.py
+```
+
+![WhatsApp Image 2025-06-03 at 01 58 34_464fd9f8](https://github.com/user-attachments/assets/8ff0827d-1738-49eb-80d8-db7564f01ed9)
+
+```
+python3 advance_aws_abuse.py
+```
+
+![WhatsApp Image 2025-06-03 at 01 58 34_aed6a79d](https://github.com/user-attachments/assets/612f068e-ef02-4e4e-8e8c-dc5b0346e294)
+
+- Initialize and deploy with Terraform:
+```
+terraform init
+terraform plan
+terraform apply
+```
+**Screenshot:** 
+
+![WhatsApp Image 2025-06-03 at 01 58 32_a992567a](https://github.com/user-attachments/assets/7d8ce24f-069b-4322-9604-ac3cd531ae9e) 
+
 
 ## 📺 Demo Video
 
 - [Watch Demo Video](https://youtu.be/your-demo-link)   
 
----
-
 ## 🤝 Contributions
 
 Contributions, bug reports, and feature requests are welcome! Please open an issue or submit a pull request.
 
----
 
 ## 📜 License
 
 MIT License © 2025 Harshita Bhati
 
----
 
 ## 📧 Contact
 
