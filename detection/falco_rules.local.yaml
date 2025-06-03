@@ -1,0 +1,15 @@
+ Your custom rules!
+- rule: PDF Dropper Execution
+  desc: Detect execution of known malicious PDF droppers
+  condition: evt.type=execve and proc.name in ("python3", "python") and proc.cmdline contains "pdf_dropper"
+  output: "PDF dropper script execution detected (command=%proc.cmdline pid=%proc.pid user=%user.name)"
+  priority: WARNING
+  tags: [pdf, malware, dropper]
+
+- rule: Suspicious AWS CLI/Boto3 Usage
+  desc: Detects potential AWS abuse through boto3 or suspicious CLI commands
+  condition: evt.type=execve and proc.name in ("aws", "python", "python3") and proc.cmdline contains "boto3"
+  output: "Potential AWS abuse detected (user=%user.name command=%proc.cmdline)"
+  priority: WARNING
+  tags: [cloud, aws, abuse]
+
