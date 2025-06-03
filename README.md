@@ -209,6 +209,22 @@ terraform apply
 
 ## Steps:
 
+- Volatility installation:
+```
+git clone https://github.com/volatilityfoundation/volatility3.git
+cd volatility3/
+python3 -m venv venv && . venv/bin/activate
+pip install -e ".[dev]"
+```
+
+- Add to your PATH:
+```
+echo 'export PATH=/home/username/.local/bin:$PATH' >> ~/.bashrc
+. ~/.bashrc
+```
+
+Replace username with your actual username.
+
 - Launched an Alpine Docker container:
 ```
 docker run -dit --name suspect alpine sh
