@@ -43,11 +43,8 @@ cloud-attack-framework/
 ├── pdf_dropper/ # Python scripts to generate malware PDFs
 ├── c2/ # Command & Control server & client code
 ├── aws_abuse/ # AWS abuse automation scripts using boto3 & Terraform
-├── persistence/ # Windows & Linux persistence scripts
 ├── detection/ # Falco and Suricata configuration rules
-├── memory_forensics/ # Volatility3 Jupyter notebooks and memory dumps
-├── diagrams/ # Architecture diagrams and flowcharts
-└── screenshots/ # Screenshots showing attack phases and detections
+
 ```
 
 ## 🚀 How to Use
