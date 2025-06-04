@@ -1,0 +1,9 @@
+boto3
+requests
+flask
+python-dotenv
+minikube
+netfilterqueue
+fpdf
+PyPDF2
+scapy
