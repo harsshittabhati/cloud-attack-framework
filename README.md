@@ -60,6 +60,23 @@ cloud-attack-framework/
 6. **Monitor and Detect:** Deploy Falco and Suricata to catch suspicious activity.  
 7. **Perform Memory Forensics:** Use Volatility3 to analyze memory dumps.
 
+## Prerequisites:
+
+-  Recommendation:
+
+Create and activate a Python virtual environment before installing dependencies. This ensures isolation and avoids conflicts with system-wide packages.
+
+```
+python3 -m venv venv
+source venv/bin/activate
+```
+
+- Install requirements using:
+  
+```
+pip install -r requirements.txt
+```
+Make sure system-level tools like Docker, AWS CLI, and Terraform are installed separately based on your OS.
 
 ## 🎯 Attack Steps
 
