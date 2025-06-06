@@ -260,19 +260,11 @@ sudo gcore -o /tmp/container_dump $PID
 ```
 vol -f /tmp/container_dump.$PID linux.pslist
 ```
-
-## 📺 Demo Video
-
-- [Watch Demo Video](https://youtu.be/your-demo-link)   
+ 
 
 ## 🤝 Contributions
 
 Contributions, bug reports, and feature requests are welcome! Please open an issue or submit a pull request.
-
-
-## 📜 License
-
-MIT License © 2025 Harshita Bhati
 
 
 ## 📧 Contact
